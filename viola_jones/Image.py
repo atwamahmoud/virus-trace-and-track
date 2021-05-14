@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from skimage import io, draw, filters
 
 class Image:
 	def __init__(self, image):
@@ -163,6 +164,60 @@ class Image:
 	def crop(self, xmin, xmax, ymin, ymax):
 		img = self.image[ymin:ymax+1, xmin:xmax+1]
 		return Image(img)
+
+
+	def gen_gaussian_matrix(self, sigma):
+		initial_length = round(sigma * 3)
+		length = initial_length if initial_length % 2 == 1 else initial_length + 1
+		arr = np.zeros((length, length))
+		factor = 1 / (math.pi * 2 * (sigma ** 2))
+		for j in range(length):
+			for i in range(length):
+				x = abs(math.floor(length / 2) - i)
+				y = abs(math.floor(length / 2) - j)
+				nominator = (x ** 2 + y ** 2) * -1
+				denominator = 2 * (sigma ** 2)
+				arr[j,i] = factor * math.exp(nominator / denominator)
+		return arr
+
+	def convolve2D(self, img, y, x, mat):
+		_sum = 0
+		length = len(mat)
+		for j in range(length):
+			for i in range(length):
+				_x = math.floor(length / 2) - i
+				_y = math.floor(length / 2) - j
+				if y + _y < 0 or y + _y >= len(img):
+					continue
+				if x + _x < 0 or x + _x >= len(img[0]):
+					continue
+				_sum += img[_x, _y] * mat[j,i]
+		return _sum
+
+	def apply_gaussian_binary(self, sigma = 2.5):
+		# blurred = np.array(np.copy(self.get_data()), dtype=np.single)
+		# mat = self.gen_gaussian_matrix(sigma)
+		# for j in range(len(blurred)):
+		# 	for i in range(len(blurred[j])):
+		# 		blurred[j,i] = self.convolve2D(clone, j, i, mat)
+		blurred = filters.gaussian(self.get_data(), sigma=sigma)
+		return Image(blurred)
+
+	def threshold_float(self, thresh = 0.1):
+		clone = np.zeros(self.get_data().shape, dtype=np.bool)
+		original_float = self.get_data()
+		for j in range(len(clone)):
+			for i in range(len(clone[j])):
+				clone[j,i] = 1 if original_float[j,i] >= thresh else 0
+		return Image(clone)
+
+	def to_uint8(self):
+		clone = np.zeros(self.get_data().shape, dtype=np.uint8)
+		original_binary = self.get_data()
+		for j in range(len(clone)):
+			for i in range(len(clone[j])):
+				clone[j,i] = 255 if original_binary[j,i] == 1 else 0
+		return Image(clone)
 
 	def show(self):
 		plt.figure("RGB")
