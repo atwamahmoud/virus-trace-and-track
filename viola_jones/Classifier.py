@@ -23,7 +23,7 @@ class Classifier:
 		x = 0
 		data = image.get_greyscale().get_data()
 		confidence = self.__viola_jones.classify(data)
-		return math.ceil(confidence * 100) / 100 >= 0.37
+		return math.ceil(confidence * 100) / 100 >= 0.45
 
 	def calc_circularity(self, w,h):
 		return (w * h) / ((w * 2 + h * 2) ** 2)
@@ -65,13 +65,13 @@ class Classifier:
 		return rr[0:_min],cc[0:_min]
 
 	def get_faces(self, img_data, scale = 1):
-		image_object = Image(img).resize(scale)
+		image_object = Image(img_data).resize(scale)
 		segmented_image = image_object.segment_skin()
 		binary_mask = segmented_image.get_binary_mask()
-		blurred = binary_mask.apply_gaussian_binary(sigma = 3)
+		blurred = binary_mask.apply_gaussian_binary(sigma = 2.5)
 		binary_mask.show()
 		blurred.show()
-		thresholded = blurred.threshold_float(thresh=0.05)
+		thresholded = blurred.threshold_float(thresh=0.5)
 		masked = image_object.apply_binary_mask(thresholded)
 		thresholded.show()
 		crops = self.get_crops(thresholded, masked)
@@ -99,11 +99,7 @@ class Classifier:
 		Image(img_data).show()
 
 
-img = io.imread("ult.jpg")
 
-classifier = Classifier("./num_feat_200.pkl")
-
-classifier.show_faces(img, scale=0.2)
 
 
 
