@@ -1,5 +1,6 @@
 import cv2, numpy as np
 from params import bounding_boxes, frame
+from transformations import get_perspective_transform, warp_perspective
 from PIL import Image
 from matplotlib import pyplot as plt
 
@@ -7,26 +8,32 @@ from matplotlib import pyplot as plt
 calibration = [[180,162],[618,0],[552,540],[682,464]]
 
 
+
 def image_to_bird(img, calibration):
     img_width, img_height = img.shape[0:2]
-    src_point = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]])
-    dest_point = np.float32(calibration)
-    transform_matrix = cv2.getPerspectiveTransform(src_point, dest_point)
-    return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
+    src_rect = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]])
+    dest_rect = np.float32(calibration)
+    transform_matrix = get_perspective_transform(src_rect, dest_rect)
+    # transform_matrix = cv2.getPerspectiveTransform(src_rect, dest_rect)
+    # return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
+    return warp_perspective(img, transform_matrix, (img_width, img_height))
 
 def bird_to_image(img, calibration):
     img_width, img_height = img.shape[0:2]
-    src_point = np.float32(calibration)
-    dest_point = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]]) 
-    transform_matrix = cv2.getPerspectiveTransform(src_point, dest_point)
-    return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
+    src_rect = np.float32(calibration)
+    dest_rect = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]]) 
+    # transform_matrix = cv2.getPerspectiveTransform(src_rect, dest_rect)
+    transform_matrix = get_perspective_transform(src_rect, dest_rect)
+    # return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
+    return warp_perspective(img, transform_matrix, (img_width, img_height))
+
 
 
 def project_point_on_bird(img, calibration, p):
     img_width, img_height = img.shape[0:2]
-    src_point = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]])
-    dest_point = np.float32(calibration)
-    transform_matrix = cv2.getPerspectiveTransform(src_point, dest_point)
+    src_rect = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]])
+    dest_rect = np.float32(calibration)
+    transform_matrix = get_perspective_transform(src_rect, dest_rect)
     M = transform_matrix
     px = (M[0][0] * p[0] + M[0][1] * p[1] + M[0][2]) / (M[2][0] * p[0] + M[2][1] * p[1] + M[2][2])
     py = (M[1][0] * p[0] + M[1][1] * p[1] + M[1][2]) / (M[2][0] * p[0] + M[2][1] * p[1] + M[2][2])
@@ -34,9 +41,9 @@ def project_point_on_bird(img, calibration, p):
 
 def project_point_on_image(img, calibration, p):
     img_width, img_height = img.shape[0:2]
-    src_point = np.float32(calibration)
-    dest_point = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]]) 
-    transform_matrix = cv2.getPerspectiveTransform(src_point, dest_point)
+    src_rect = np.float32(calibration)
+    dest_rect = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]]) 
+    transform_matrix = get_perspective_transform(src_rect, dest_rect)
     M = transform_matrix
     px = (M[0][0] * p[0] + M[0][1] * p[1] + M[0][2]) / (M[2][0] * p[0] + M[2][1] * p[1] + M[2][2])
     py = (M[1][0] * p[0] + M[1][1] * p[1] + M[1][2]) / (M[2][0] * p[0] + M[2][1] * p[1] + M[2][2])
@@ -72,12 +79,11 @@ _frame = frame(boxes)
 
 fig_1 = plt.figure("Bounding boxes")
 plt.imshow(_frame, interpolation='nearest')
-
 _frame_bird = image_to_bird(_frame, calibration)
 
 fig_2 = plt.figure("Bird Eye view")
 plt.imshow(_frame_bird, interpolation='nearest')
-
+plt.show()
 ## Box -> x1,y1,x2,y2
 _centroids = centroids(boxes, _frame, calibration)
 
