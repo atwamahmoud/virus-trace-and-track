@@ -1,7 +1,6 @@
 import numpy as np
 import warping
 import time
-from ctypes import *
 
 """
 
@@ -77,6 +76,7 @@ def get_perspective_transform(src_rect, dest_rect):
     M[2,2] = 1.
     return M
 
+# Wrapper for the Cython's implementation of warp_perspective
 def __warp_perspective_cython(img, transformation_matrix, image_dimensions):
     return warping.warp_perspective(img, transformation_matrix, image_dimensions)
 
@@ -85,6 +85,7 @@ def warp_perspective(img, transformation_matrix, image_dimensions):
     res = __warp_perspective_cython(img, transformation_matrix, image_dimensions)
     return res
 
+# Python implementation of warp_perspective
 def __warp_perspective(img, transformation_matrix, image_dimensions):
     """ 
     Transforms an image using a transformation matrix
