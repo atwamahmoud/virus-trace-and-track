@@ -14,18 +14,17 @@ def image_to_bird(img, calibration):
     src_rect = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]])
     dest_rect = np.float32(calibration)
     transform_matrix = get_perspective_transform(src_rect, dest_rect)
-    # transform_matrix = cv2.getPerspectiveTransform(src_rect, dest_rect)
-    # return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
-    return warp_perspective(img, transform_matrix, (img_width, img_height))
+    # cv2.warpPerspective is muuch faster...
+    return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
+    # return warp_perspective(img, transform_matrix, (img_width, img_height))
 
 def bird_to_image(img, calibration):
     img_width, img_height = img.shape[0:2]
     src_rect = np.float32(calibration)
     dest_rect = np.float32([[0, 0], [img_width, 0], [0, img_height], [img_width, img_height]]) 
-    # transform_matrix = cv2.getPerspectiveTransform(src_rect, dest_rect)
     transform_matrix = get_perspective_transform(src_rect, dest_rect)
-    # return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
-    return warp_perspective(img, transform_matrix, (img_width, img_height))
+    return cv2.warpPerspective(img, transform_matrix, (img_width, img_height))
+    # return warp_perspective(img, transform_matrix, (img_width, img_height))
 
 
 
@@ -51,9 +50,11 @@ def project_point_on_image(img, calibration, p):
 
 
 def distance(p1, p2):
+    # calculates the euclidean distance between two centroids...
     return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 def centroids(boxes, image, calibration):
+    # Returns the center of each bounding box in bird eye view...
     bird_view = image_to_bird(image.copy(), calibration)
     centroids = []
     for b in boxes:

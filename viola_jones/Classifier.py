@@ -28,7 +28,7 @@ class Classifier:
 	def calc_circularity(self, w,h):
 		return (w * h) / ((w * 2 + h * 2) ** 2)
 
-	def get_crops(self, thresholded_image, img_object):
+	def get_crops(self, thresholded_image, img_object, scale):
 		crops = []
 		data = thresholded_image.to_uint8().get_data()
 		cnts, hierarchy = cv2.findContours(data, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -43,7 +43,8 @@ class Classifier:
 	    	"x": x,
 	    	"w": w,
 	    	"y": y,
-	    	"h": h
+	    	"h": h,
+	    	"scale": scale
 	    })
 		return crops
 
@@ -64,17 +65,17 @@ class Classifier:
 		_min = min(len(rr), len(cc))
 		return rr[0:_min],cc[0:_min]
 
-	def get_faces(self, img_data, scale = 1):
+	def get_faces(self, img_data, scale):
 		image_object = Image(img_data).resize(scale)
 		segmented_image = image_object.segment_skin()
 		binary_mask = segmented_image.get_binary_mask()
 		blurred = binary_mask.apply_gaussian_binary(sigma = 2.5)
-		binary_mask.show()
-		blurred.show()
+		# binary_mask.show()
+		# blurred.show()
 		thresholded = blurred.threshold_float(thresh=0.5)
 		masked = image_object.apply_binary_mask(thresholded)
-		thresholded.show()
-		crops = self.get_crops(thresholded, masked)
+		# thresholded.show()
+		crops = self.get_crops(thresholded, masked, scale)
 		face_crops = []
 		for crop in crops:
 			if self.is_face_crop(crop):
@@ -96,104 +97,4 @@ class Classifier:
 			img_data[cc2,rr2] = [255, 0, 0]
 			img_data[cc3,rr3] = [255, 0, 0]
 			img_data[cc4,rr4] = [255, 0, 0]
-		Image(img_data).show()
-
-
-
-
-
-
-
-
-# binary_mask.show()
-
-
-# opened = morphology.open(opened)
-# opened = filters.gaussian(binary_mask.get_data(), sigma=2.5)
-# for j in range(len(opened)):
-# 	for i in range(len(opened[j])):
-# 		opened[j,i] = 1 if opened[j,i] >= 0.4 else 0
-
-# opened = Image(opened)		
-
-# opened.show()
-# opened = morphology.dilute(opened)
-# # opened = binary_mask
-# opened.show()
-
-# # opened = morphology.open(opened)
-# # opened = morphology.open(opened)
-# opened.show()
-
-
-
-
-# data_masked = np.uint8(opened.get_data())
-
-## Crop Non-black stuff...
-
-
-# print(len())
-
-# data_masked = masked.get_data()
-# with open("./training.pkl", "rb") as file:
-# 	test = pickle.load(file)
-# 	img,classification = test[20]
-# 	print(img)
-# 	Image(img).show_greyscale()
-
-# # print(test)
-
-
-
-
-
-
-# original_data = image_object.get_data()
-# print(len(crops))
-# for crop in crops:
-# 	image = crop.get("image")
-# 	data = image.get_data()
-# 	h,w,_ = data.shape
-# 	resized = image.resize_custom(19/w, 19/h)
-# 	resized_shape = [x for x in resized.get_data().shape]
-# 	if len(resized_shape) != 3 or resized_shape[0] != 19 or resized_shape[1] != 19:
-# 		continue
-# 	if not classifier.is_face(resized):
-# 		# resized.show()
-# 		continue
-
-
-# faces = classifier.get_faces(data_masked)
-# print(faces)
-# print(img.shape)
-
-
-# for face in faces:
-# 	scale = face.get('scale');
-# 	print(face.get('xmin'), face.get('ymin'), face.get('xmax'), face.get('ymax'))
-
-
-
-# Image(data_masked).show()
-
-
-# img = cv2.imread('faces.jpg')
-# img = cv2.medianBlur(img,5)
-
-# # cimg = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
-# _img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-# circles = cv2.HoughCircles(_img,cv2.HOUGH_GRADIENT,1,60,
-#                             param1=1,param2=2,minRadius=0,maxRadius=0)
-
-
-# circles = np.uint16(np.around(circles))
-# for i in circles[0,:]:
-#     # draw the outer circle
-#     cv2.circle(img,(i[0],i[1]),i[2],(0,255,0),2)
-#     # draw the center of the circle
-#     cv2.circle(img,(i[0],i[1]),2,(0,0,255),3)
-
-# cv2.imshow('detected circles',img)
-
-
+		# Image(img_data).show()

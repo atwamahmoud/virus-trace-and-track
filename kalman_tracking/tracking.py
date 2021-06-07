@@ -23,7 +23,7 @@ class KalmanTracking():
         trackedCoordinates = [t.getMean() for t in self.trackedPeople]
 
         costMatrix = iou_vectorized(
-            KalmanMeasuresTobbox(np.asarray(trackedCoordinates, dtype=np.float32).reshape(-1, 8)), detections)
+            kalman_measures_to_bbox(np.asarray(trackedCoordinates, dtype=np.float32).reshape(-1, 8)), detections)
         completeMatching = np.empty(shape=(0, 2), dtype=int)
         if min(costMatrix.shape) > 0:
             passedThreshols = (costMatrix > self.IOUThreshold).astype(np.int32)
@@ -57,12 +57,12 @@ class KalmanTracking():
     def correctAll(self, detections):
         allMatches, allUnmatched, unmatchedDet = self.matchDetectionsNaiveApproach(detections)
         for i, j in allMatches:
-            self.trackedPeople[i].correct(self.kalmanFilter, bboxToKalmanMeasures(detections[j]))
+            self.trackedPeople[i].correct(self.kalmanFilter, bbox_to_kalman_measures(detections[j]))
         for i in allUnmatched:
             self.trackedPeople[i].markUnmatched()
 
         for i in unmatchedDet:
-            newMean, newCovariance = self.kalmanFilter.calculateMeanAndCovInitial(bboxToKalmanMeasures(detections[i]))
+            newMean, newCovariance = self.kalmanFilter.calculateMeanAndCovInitial(bbox_to_kalman_measures(detections[i]))
             id = -1
             name = ""
             cameraId = -1
@@ -75,10 +75,11 @@ class KalmanTracking():
             self.id += 1
 
         self.trackedPeople = [person for person in self.trackedPeople if person.getState() != "D"]
+    
     def match(self,detections,state):
         self.correctAll(detections)
         trackedCoordinates = [t.getMean()[:4] for t in self.trackedPeople if t.getState() == state]
         trackedIds = [t.id + 1 for t in self.trackedPeople if t.getState() == state]
-        correctedDetNpArr = KalmanMeasuresTobbox(np.asarray(trackedCoordinates, dtype=np.float32).reshape(-1, 4))
+        correctedDetNpArr = kalman_measures_to_bbox(np.asarray(trackedCoordinates, dtype=np.float32).reshape(-1, 4))
         return np.concatenate((correctedDetNpArr, np.array(trackedIds).reshape(-1, 1)), axis=1) if len(
             trackedIds) != 0 else []

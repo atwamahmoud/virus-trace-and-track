@@ -2,7 +2,7 @@
 import numpy as np
 
 """##From BBOX Mean to Kalman Measures (Mean) (Vectorized)"""
-def bboxToKalmanMeasures(bbox):
+def bbox_to_kalman_measures(bbox):
 
     # box1 -- object with coordinates (box1_x1, box1_y1, box1_x2, box_1_y2)
     (box1_x1, box1_y1, box1_x2, box1_y2) = bbox
@@ -15,7 +15,8 @@ def bboxToKalmanMeasures(bbox):
     return np.array([centerX, centerY, aspectRatio, height]).reshape(4, 1)
 
 """##From Kalman Mean to BBOX (Vectorized)"""
-def KalmanMeasuresTobbox(measures):
+# def KalmanMeasuresTobbox(measures):
+def kalman_measures_to_bbox(measures):
     #width = aspectRatio * height
     height=measures[...,3]
     width=measures[...,2]*height
@@ -29,12 +30,12 @@ def KalmanMeasuresTobbox(measures):
 
 """##IOU Multiple Boxes Vectorized """
 def iou_vectorized(boxes1, boxes2):
-    """Implement the intersection over union (IoU) between all boxes1 and all boxes2
-    
-    Arguments:
-    boxes1 -- a numpy array [[xi1,yi1,xi2,yi2],...],
-    boxes2 -- a numpy array [[xi1,yi1,xi2,yi2],...],
-    """
+    """
+        Implement the intersection over union (IoU) between all boxes1 and all boxes2
+        Arguments:
+        boxes1 -- a numpy array [[xi1,yi1,xi2,yi2],...],
+        boxes2 -- a numpy array [[xi1,yi1,xi2,yi2],...],
+    """
     boxes1 = np.expand_dims(boxes1, 1)
     boxes2 = np.expand_dims(boxes2, 0)
     xi1 = np.maximum(boxes1[..., 0], boxes2[..., 0])
