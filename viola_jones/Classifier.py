@@ -1,4 +1,5 @@
-from ViolaJones import ViolaJones, WeakClassifier
+from ViolaJones import ViolaJones
+from WeakClassifier import WeakClassifier
 from Image import Image
 import math
 from skimage import io, draw, filters
@@ -6,12 +7,11 @@ import pickle
 from Morphology import Morphology	
 import numpy as np
 import cv2
-
+import datetime
 
 class Classifier:
-	def __init__(self, model_path, scales=[1]):
+	def __init__(self, model_path):
 		self.__viola_jones = ViolaJones.load(model_path)
-		self.__scales = scales
 
 	def set_model(self, model_path):
 		self.__viola_jones = ViolaJones.load(model_path)
@@ -23,7 +23,8 @@ class Classifier:
 		x = 0
 		data = image.get_greyscale().get_data()
 		confidence = self.__viola_jones.classify(data)
-		return math.ceil(confidence * 100) / 100 >= 0.45
+		rounded_confidence = math.ceil(confidence * 100) / 100
+		return rounded_confidence >= 0.43, rounded_confidence / 0.6
 
 	def calc_circularity(self, w,h):
 		return (w * h) / ((w * 2 + h * 2) ** 2)
@@ -35,9 +36,7 @@ class Classifier:
 		for c in cnts:
 			x,y,w,h = cv2.boundingRect(c)
 			#calculate circulatiy
-			c = self.calc_circularity(w,h)
-			if c <= 0.05:
-				continue
+			# c = self.calc_circularity(w,h)
 			crops.append({
 	    	"image": img_object.crop(x, x+w, y, y+h),
 	    	"x": x,
@@ -65,22 +64,41 @@ class Classifier:
 		_min = min(len(rr), len(cc))
 		return rr[0:_min],cc[0:_min]
 
-	def get_faces(self, img_data, scale):
+	def get_faces(self, img_data, scale = 1):
 		image_object = Image(img_data).resize(scale)
 		segmented_image = image_object.segment_skin()
 		binary_mask = segmented_image.get_binary_mask()
-		blurred = binary_mask.apply_gaussian_binary(sigma = 2.5)
+		
+		morphology = Morphology([
+			[1,1,1,1,1],
+			[0,1,1,1,0],
+			[0,0,1,0,0],
+			[0,1,1,1,0],
+			[1,1,1,1,1],
+		])
+		dilated = morphology.dilate(binary_mask)
+		blurred = dilated.apply_gaussian_binary(sigma = 2.5)
 		# binary_mask.show()
+		# dilated.show()
 		# blurred.show()
-		thresholded = blurred.threshold_float(thresh=0.5)
+		_,thresholded = cv2.threshold(blurred.get_data(),0.4,1,cv2.THRESH_BINARY)
+		thresholded = Image(thresholded)
 		masked = image_object.apply_binary_mask(thresholded)
 		# thresholded.show()
 		crops = self.get_crops(thresholded, masked, scale)
 		face_crops = []
 		for crop in crops:
-			if self.is_face_crop(crop):
+			above_threshold, confidence = self.is_face_crop(crop)
+			if above_threshold:
+				crop["confidence"] = confidence
 				face_crops.append(crop)
 		return face_crops
+
+	def get_faces_data(self, img_data, scale = 1):
+		faces = self.get_faces(img_data, scale)
+		for face in faces:
+			del face["image"]
+		return faces
 
 	def show_faces(self, img_data, scale = 1):
 		faces = self.get_faces(img_data, scale)
@@ -97,4 +115,5 @@ class Classifier:
 			img_data[cc2,rr2] = [255, 0, 0]
 			img_data[cc3,rr3] = [255, 0, 0]
 			img_data[cc4,rr4] = [255, 0, 0]
-		# Image(img_data).show()
+		Image(img_data).show()
+

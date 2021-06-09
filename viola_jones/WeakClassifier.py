@@ -1,5 +1,7 @@
-POSITIVE_CLASSIFICATION = 1
-NEGATIVE_CLASSIFICATION = 0
+from helpers import POSITIVE_CLASSIFICATION, \
+  NEGATIVE_CLASSIFICATION, \
+  get_applied_feature
+
 
 class WeakClassifier():
   def __init__(self, feature, theta, p):

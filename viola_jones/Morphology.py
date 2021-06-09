@@ -52,7 +52,7 @@ class Morphology:
 		return Image(unpadded_image)
 		# return Image(cv2.erode(image.get_data(),self.kernel,iterations = 1))
 
-	def dilute(self, image):
+	def dilate(self, image):
 		# return Image(cv2.dilate(image.get_data(),self.kernel,iterations = 1))
 		padded_image = self.apply_padding(image)
 		padding_width = self.get_padding_width()
@@ -68,10 +68,10 @@ class Morphology:
 		return Image(unpadded_image)
 
 	def open(self, image):
-		return self.dilute(self.erode(image))
+		return self.dilate(self.erode(image))
 	
 	def close(self, image):
-		return self.erode(self.dilute(image))
+		return self.erode(self.dilate(image))
 
 
 

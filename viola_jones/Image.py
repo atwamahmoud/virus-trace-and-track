@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from skimage import io, draw, filters
+import os
+import base64
+from PIL import Image as PIL_Image
 
 class Image:
 	def __init__(self, image):
@@ -224,6 +227,16 @@ class Image:
 		plt.imshow(self.image, cmap='gray')
 		plt.show()
 
-
-
-
+	@staticmethod
+	def from_b64(base64_str):
+		try:
+			if isinstance(base64_str, bytes):
+				base64_str = base64_str.decode("utf-8")
+		 
+			base64_str = base64_str.replace(' ', '+')
+			imgdata = base64.b64decode(base64_str)
+			img = io.imread(imgdata, plugin='imageio')
+			return Image(img)
+		except Exception as e:
+			print(e)
+			return None
