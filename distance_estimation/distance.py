@@ -4,10 +4,6 @@ from transformations import get_perspective_transform, warp_perspective
 from PIL import Image
 from matplotlib import pyplot as plt
 
-# Should be taken from sensors or reference points in our system...
-calibration = [[180,162],[618,0],[552,540],[682,464]]
-
-
 
 def image_to_bird(img, calibration):
     img_width, img_height = img.shape[0:2]
@@ -53,9 +49,8 @@ def distance(p1, p2):
     # calculates the euclidean distance between two centroids...
     return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
-def centroids(boxes, image, calibration):
+def centroids(boxes, image, bird_view, calibration):
     # Returns the center of each bounding box in bird eye view...
-    bird_view = image_to_bird(image.copy(), calibration)
     centroids = []
     for b in boxes:
         xmin, ymin, xmax, ymax = b[0], b[1], b[2], b[3]
@@ -75,29 +70,17 @@ def centroids(boxes, image, calibration):
 
     return centroids
 
-boxes = bounding_boxes()
-_frame = frame(boxes)
+def get_results(img, calibration, bounding_boxes):
+    img_bird = image_to_bird(img, calibration)
 
-fig_1 = plt.figure("Bounding boxes")
-plt.imshow(_frame, interpolation='nearest')
-_frame_bird = image_to_bird(_frame, calibration)
+    _centroids = centroids(bounding_boxes, img, img_bird, calibration)
 
-fig_2 = plt.figure("Bird Eye view")
-plt.imshow(_frame_bird, interpolation='nearest')
-plt.show()
-## Box -> x1,y1,x2,y2
-_centroids = centroids(boxes, _frame, calibration)
+    distances = []
 
-distances = []
+    for i in range(0, len(_centroids)):
+        ith_distances = []
+        for j in range(0, len(_centroids)):
+            ith_distances.append(distance(_centroids[i], _centroids[j]))
+        distances.append(ith_distances)
 
-for i in range(0, len(_centroids)):
-    ith_distances = []
-    for j in range(0, len(_centroids)):
-        ith_distances.append(distance(_centroids[i], _centroids[j]))
-    distances.append(ith_distances)
-
-fig_3 = plt.figure("Distance Heat map")
-c = plt.imshow(distances, interpolation='nearest', cmap="RdBu")
-plt.colorbar(c)
-plt.show()
-
+    return distances    
