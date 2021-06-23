@@ -114,10 +114,10 @@ def __warp_perspective(img, transformation_matrix, image_dimensions):
     print(x)
     for i in range(0, height):
         for j in range(0, width):
-            points = np.array([i,j,1]).dot(transformation_matrix.T)
-            z = points[2]
-            y = points[0]
-            x = points[1]
+            point = np.array([i,j,1]).dot(transformation_matrix.T)
+            z = point[2]
+            y = point[0]
+            x = point[1]
 
             z = 1 if z == 0 else z
             x = int(x/z)
@@ -128,3 +128,9 @@ def __warp_perspective(img, transformation_matrix, image_dimensions):
                 transformed[y,x] = img[i,j]
     return transformed
 
+def project_point(x,y, transformation_matrix):
+    M = transformation_matrix
+    p = [x,y]
+    px = (M[0][0] * p[0] + M[0][1] * p[1] + M[0][2]) / (M[2][0] * p[0] + M[2][1] * p[1] + M[2][2])
+    py = (M[1][0] * p[0] + M[1][1] * p[1] + M[1][2]) / (M[2][0] * p[0] + M[2][1] * p[1] + M[2][2])
+    return (int(px), int(py))

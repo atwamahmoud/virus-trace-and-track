@@ -1,6 +1,4 @@
 import falcon
-from Classifier import Classifier
-from Image import Image
 from helpers import from_b64
 import json
 import distance
@@ -18,26 +16,20 @@ class CoordinatesResource:
     def on_post(self, req, resp):
         """Handles POST requests"""
         body = req.get_media()
-        img = body.get('img')
+        img_b64 = body.get('img')
         bounding_boxes = body.get('bounding_boxes')
         calibration = body.get('calibration_matrix')
+        circle_radius = body.get('circle_radius')
         formatted_bounding_boxes = []
         for bounding_box in bounding_boxes:
-            """
-                {
-                    x: int,
-                    y: int,
-                    w: int,
-                    h: int,
-                }
-            """
-            x = bounding_box.get('x')
-            y = bounding_box.get('y')
-            w = bounding_box.get('w')
-            h = bounding_box.get('h')
-            formatted_bounding_boxes.append([x, y, x+w, y+h])
+            print(bounding_box)
+            x1 = bounding_box.get('x1')
+            y1 = bounding_box.get('y1')
+            x2 = bounding_box.get('x2')
+            y2 = bounding_box.get('y2')
+            formatted_bounding_boxes.append([x1, y1, x2, y2])
         img = from_b64(img_b64)
-        results = distance.get_results(img, calibration, formatted_bounding_boxes)
+        results = distance.get_coordinates_with_distances(img, calibration, formatted_bounding_boxes, circle_radius)
 
         # Should save bounding box locations in a db....
 

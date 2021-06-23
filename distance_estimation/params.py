@@ -4,6 +4,7 @@ import numpy as np
 from skimage import io
 seed(1)
 
+# This is for testing purposes only, it's not used now...
 def get_bounding_box():
     x = randint(0, 540)
     y = randint(180, 480)
@@ -11,10 +12,9 @@ def get_bounding_box():
     y2 = y - 180;
     return [x, y, x2, y2]
 
+
+# This is for testing purposes only, it's not used now...
 def bounding_boxes():
-    # boxes = []
-    # for i in range(0, 10):
-    #     boxes.append(get_bounding_box())
     return [
         [627,549,743,812],
         [886,750,982,1000],

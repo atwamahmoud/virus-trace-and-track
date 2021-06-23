@@ -1,5 +1,6 @@
 import falcon
 from Classifier import Classifier
+from Image import Image
 import json
 
 class FacesResource:
